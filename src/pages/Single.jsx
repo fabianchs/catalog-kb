@@ -1,37 +1,84 @@
-// Import necessary hooks and components from react-router-dom and other libraries.
-import { Link, useParams } from "react-router-dom";  // To use link for navigation and useParams to get URL parameters
-import PropTypes from "prop-types";  // To define prop types for this component
-import rigoImageUrl from "../assets/img/rigo-baby.jpg"  // Import an image asset
-import useGlobalReducer from "../hooks/useGlobalReducer";  // Import a custom hook for accessing the global state
+import { Link, useParams } from "react-router-dom";
+import bydCatalog from "../data/BYD.json";
 
-// Define and export the Single component which displays individual item details.
-export const Single = props => {
-  // Access the global state using the custom hook.
-  const { store } = useGlobalReducer()
+const placeholderImage = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/BYD_Company%2C_Ltd._-_Logo.svg/960px-BYD_Company%2C_Ltd._-_Logo.svg.png";
 
-  // Retrieve the 'theId' URL parameter using useParams hook.
-  const { theId } = useParams()
-  const singleTodo = store.todos.find(todo => todo.id === parseInt(theId));
+export const Single = () => {
+  const { theId } = useParams();
+  const products = bydCatalog.items || [];
+  const product = products.find((item) => item.id === theId);
+
+  if (!product) {
+    return (
+      <div className="container py-5 text-center">
+        <h1 className="display-6">Producto no encontrado</h1>
+        <p className="text-muted">El producto solicitado no existe en este catálogo.</p>
+        <Link to="/" className="btn btn-brand">
+          Volver al catálogo
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="container text-center">
-      {/* Display the title of the todo element dynamically retrieved from the store using theId. */}
-      <h1 className="display-4">Todo: {singleTodo?.title}</h1>
-      <hr className="my-4" />  {/* A horizontal rule for visual separation. */}
-
-      {/* A Link component acts as an anchor tag but is used for client-side routing to prevent page reloads. */}
-      <Link to="/">
-        <span className="btn btn-primary btn-lg" href="#" role="button">
-          Back home
-        </span>
-      </Link>
-    </div>
+    <section className="product-detail py-5">
+      <div className="container">
+        <div className="row g-5 align-items-center">
+          <div className="col-lg-6">
+            <div
+              className="detail-media rounded-4"
+              style={{ backgroundImage: `url(${product.image || placeholderImage})` }}
+            />
+          </div>
+          <div className="col-lg-6">
+            <span className="eyebrow text-success">{product.category_es || product.category}</span>
+            <h1 className="mt-3">{product.product_name_es || product.product_name_en}</h1>
+            <p className="lead text-muted">{product.description}</p>
+            <div className="mb-4">
+              <span className="badge bg-success bg-opacity-15 text-success me-2 mb-2">
+                {product.model}
+              </span>
+              <span className="badge bg-success bg-opacity-15 text-success me-2 mb-2">
+                {product.subcategory_es || product.subcategory}
+              </span>
+              <span className="badge bg-success bg-opacity-15 text-success me-2 mb-2">
+                OEM: {product.oem}
+              </span>
+            </div>
+            <div className="table-responsive mb-4">
+              <table className="table table-borderless">
+                <tbody>
+                  <tr>
+                    <th>Marca</th>
+                    <td>{product.eom_brand || "BYD"}</td>
+                  </tr>
+                  <tr>
+                    <th>Modelo</th>
+                    <td>{product.model || "N/A"}</td>
+                  </tr>
+                  <tr>
+                    <th>Años compat.</th>
+                    <td>{product.vehicle_years_text || (Array.isArray(product.compatible_years) ? product.compatible_years.join(", ") : "N/A")}</td>
+                  </tr>
+                  <tr>
+                    <th>Número EOM</th>
+                    <td>{product.oem || "N/A"}</td>
+                  </tr>
+                  <tr>
+                    <th>Part number</th>
+                    <td>{product.part_number || "N/A"}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="d-flex flex-wrap gap-3">
+              <Link to="/" className="btn btn-outline-secondary btn-lg">
+                Volver al catálogo
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
-};
-
-// Use PropTypes to validate the props passed to this component, ensuring reliable behavior.
-Single.propTypes = {
-  // Although 'match' prop is defined here, it is not used in the component.
-  // Consider removing or using it as needed.
-  match: PropTypes.object
 };
