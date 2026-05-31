@@ -8,19 +8,13 @@ export const Navbar = () => {
           <div className="brand-mark">K</div>
           <div>
             <div className="brand-name">Kolber Auto</div>
-            <small className="text-muted">Catálogo</small>
+            <small className="text-muted">Catálogo multimarca</small>
           </div>
         </Link>
 
         <div className="nav-links d-flex flex-wrap gap-3 align-items-center">
           <Link to="/" className="nav-link">
-            Inicio
-          </Link>
-          <Link to="/demo" className="nav-link">
-            Demo
-          </Link>
-          <Link to="/single/1" className="nav-link">
-            Producto
+            Catálogo
           </Link>
         </div>
       </div>
