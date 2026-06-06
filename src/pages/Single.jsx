@@ -3,10 +3,10 @@ import {
   findCatalogItem,
   getBrand,
   getCategory,
+  getDetailFields,
   getDisplayName,
   getPrimaryCode,
   getSubcategory,
-  getYearText,
 } from "../data/catalog";
 
 const placeholderImage =
@@ -20,6 +20,7 @@ const brandImages = {
 export const Single = () => {
   const { theId } = useParams();
   const product = findCatalogItem(theId);
+  const detailFields = getDetailFields(product || {});
 
   if (!product) {
     return (
@@ -63,34 +64,12 @@ export const Single = () => {
             <div className="table-responsive mb-4">
               <table className="table table-borderless">
                 <tbody>
-                  <tr>
-                    <th>Marca</th>
-                    <td>{getBrand(product)}</td>
-                  </tr>
-                  <tr>
-                    <th>Modelo</th>
-                    <td>{product.model || "N/A"}</td>
-                  </tr>
-                  <tr>
-                    <th>Años compat.</th>
-                    <td>{getYearText(product) || "N/A"}</td>
-                  </tr>
-                  <tr>
-                    <th>OEM</th>
-                    <td>{product.oem || "N/A"}</td>
-                  </tr>
-                  <tr>
-                    <th>Part number</th>
-                    <td>{product.part_number || "N/A"}</td>
-                  </tr>
-                  <tr>
-                    <th>Catálogo fuente</th>
-                    <td>{product.source_catalog || "N/A"}</td>
-                  </tr>
-                  <tr>
-                    <th>Item</th>
-                    <td>{product.item_number || "N/A"}</td>
-                  </tr>
+                  {detailFields.map(({ key, label, value }) => (
+                    <tr key={key}>
+                      <th>{label}</th>
+                      <td>{String(value)}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

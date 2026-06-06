@@ -7,9 +7,9 @@ import {
   getCategory,
   getDisplayName,
   getPrimaryCode,
+  getSearchableText,
   getSubcategory,
   getYearOptions,
-  getYearText,
   normalizeText,
 } from "../data/catalog";
 
@@ -20,6 +20,8 @@ export const Home = () => {
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [selectedEngine, setSelectedEngine] = useState("");
+  const [selectedEngineCode, setSelectedEngineCode] = useState("");
   const products = catalogItems;
 
   const models = useMemo(() => {
@@ -64,6 +66,23 @@ export const Home = () => {
     [products]
   );
 
+  const engines = useMemo(() => {
+    const filteredProducts = products
+      .filter((item) => (selectedBrand ? getBrand(item) === selectedBrand : true))
+      .filter((item) => (selectedModel ? item.model === selectedModel : true));
+
+    return [...new Set(filteredProducts.map((item) => item.engine).filter(Boolean))].sort();
+  }, [products, selectedBrand, selectedModel]);
+
+  const engineCodes = useMemo(() => {
+    const filteredProducts = products
+      .filter((item) => (selectedBrand ? getBrand(item) === selectedBrand : true))
+      .filter((item) => (selectedModel ? item.model === selectedModel : true))
+      .filter((item) => (selectedEngine ? item.engine === selectedEngine : true));
+
+    return [...new Set(filteredProducts.map((item) => item.engine_code).filter(Boolean))].sort();
+  }, [products, selectedBrand, selectedModel, selectedEngine]);
+
   useEffect(() => {
     if (selectedModel && !models.includes(selectedModel)) {
       setSelectedModel("");
@@ -82,36 +101,26 @@ export const Home = () => {
     }
   }, [subcategories, selectedSubcategory]);
 
+  useEffect(() => {
+    if (selectedEngine && !engines.includes(selectedEngine)) {
+      setSelectedEngine("");
+    }
+  }, [engines, selectedEngine]);
+
+  useEffect(() => {
+    if (selectedEngineCode && !engineCodes.includes(selectedEngineCode)) {
+      setSelectedEngineCode("");
+    }
+  }, [engineCodes, selectedEngineCode]);
+
   const filteredProducts = useMemo(() => {
     const normalizedQuery = normalizeText(query);
 
     return products.filter((product) => {
       const brandValue = getBrand(product);
-      const yearText = getYearText(product);
       const yearOptions = getYearOptions(product);
       const matchesQuery = normalizedQuery
-        ? [
-            product.id,
-            product.model,
-            product.source_catalog,
-            product.category,
-            product.category_es,
-            product.subcategory,
-            product.subcategory_es,
-            product.product_name_en,
-            product.product_name_es,
-            product.technical_name_es,
-            product.description,
-            product.oem,
-            product.part_number,
-            product.item_number,
-            brandValue,
-            yearText,
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase()
-            .includes(normalizedQuery)
+        ? getSearchableText(product).includes(normalizedQuery)
         : true;
 
       const matchesModel = selectedModel ? product.model === selectedModel : true;
@@ -121,6 +130,10 @@ export const Home = () => {
         : true;
       const matchesBrand = selectedBrand ? brandValue === selectedBrand : true;
       const matchesYear = selectedYear ? yearOptions.includes(selectedYear) : true;
+      const matchesEngine = selectedEngine ? product.engine === selectedEngine : true;
+      const matchesEngineCode = selectedEngineCode
+        ? product.engine_code === selectedEngineCode
+        : true;
 
       return (
         matchesQuery &&
@@ -128,10 +141,12 @@ export const Home = () => {
         matchesCategory &&
         matchesSubcategory &&
         matchesBrand &&
-        matchesYear
+        matchesYear &&
+        matchesEngine &&
+        matchesEngineCode
       );
     });
-  }, [products, query, selectedModel, selectedCategory, selectedSubcategory, selectedBrand, selectedYear]);
+  }, [products, query, selectedModel, selectedCategory, selectedSubcategory, selectedBrand, selectedYear, selectedEngine, selectedEngineCode]);
 
   return (
     <main className="catalog-page">
@@ -144,7 +159,7 @@ export const Home = () => {
                 Catálogo de repuestos Kolber Autoparts
               </h1>
               <p className="lead text-white-75 mt-3">
-                Busca piezas BYD y Geely por marca, modelo, año, categoría, OEM o part number.
+                Busca piezas BYD, Geely y Gates por marca, modelo, motor, código, año, categoría o OEM/part number.
               </p>
             </div>
             <div className="col-lg-5 mt-5 mt-lg-0">
@@ -186,7 +201,7 @@ export const Home = () => {
                 onChange={(event) => setQuery(event.target.value)}
                 type="search"
                 className="form-control form-control-lg"
-                placeholder="Buscar por nombre, OEM, part number, marca, modelo, año o categoría"
+                placeholder="Buscar por nombre, motor, OEM, part number, marca, modelo, año o categoría"
               />
             </div>
             <div className="col-md-2">
@@ -246,6 +261,40 @@ export const Home = () => {
                 {categories.map((category) => (
                   <option key={category} value={category}>
                     {category}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-2">
+              <label className="form-label text-muted">Motor</label>
+              <select
+                value={selectedEngine}
+                onChange={(event) => {
+                  setSelectedEngine(event.target.value);
+                  setSelectedEngineCode("");
+                }}
+                className="form-select form-select-lg"
+              >
+                <option value="">Todos los motores</option>
+                {engines.map((engine) => (
+                  <option key={engine} value={engine}>
+                    {engine}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-2">
+              <label className="form-label text-muted">Engine code</label>
+              <select
+                value={selectedEngineCode}
+                onChange={(event) => setSelectedEngineCode(event.target.value)}
+                className="form-select form-select-lg"
+                disabled={selectedEngine && engineCodes.length === 0}
+              >
+                <option value="">Todos los codes</option>
+                {engineCodes.map((code) => (
+                  <option key={code} value={code}>
+                    {code}
                   </option>
                 ))}
               </select>
