@@ -5,6 +5,17 @@ import beltsCatalog from "./BELTS.json";
 
 const catalogs = [bydCatalog, geelyCatalog, gatesCatalog, beltsCatalog];
 
+const multiWordVehicleMakes = [
+  "ALFA ROMEO",
+  "ASTON MARTIN",
+  "LAND ROVER",
+  "MERCEDES BENZ",
+  "MERCEDES-BENZ",
+  "MINI COOPER",
+  "ROLLS ROYCE",
+  "ROLLS-ROYCE",
+];
+
 export const catalogItems = catalogs.flatMap((catalog, catalogIndex) =>
   Array.isArray(catalog.items)
     ? catalog.items.map((item, itemIndex) => ({
@@ -27,10 +38,25 @@ export function normalizeText(text = "") {
   return String(text).trim().toLowerCase();
 }
 
+export function getVehicleMakeFromModel(model = "") {
+  const normalizedModel = String(model).trim().replace(/\s+/g, " ");
+  if (!normalizedModel) return "";
+
+  const upperModel = normalizedModel.toUpperCase();
+  const multiWordMake = multiWordVehicleMakes.find(
+    (make) => upperModel === make || upperModel.startsWith(`${make} `)
+  );
+
+  return multiWordMake || normalizedModel.split(" ")[0];
+}
+
 export function getBrand(product = {}) {
   if (product.make && String(product.make).trim()) {
     return String(product.make).trim();
   }
+
+  const vehicleMake = getVehicleMakeFromModel(product.model);
+  if (vehicleMake) return vehicleMake;
 
   return (
     product.generic_brand ||
