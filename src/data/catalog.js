@@ -1,15 +1,21 @@
 import bydCatalog from "./BYD.json";
 import geelyCatalog from "./GEELY.json";
 import gatesCatalog from "./GATES.json";
+import beltsCatalog from "./BELTS.json";
 
-const catalogs = [bydCatalog, geelyCatalog, gatesCatalog];
+const catalogs = [bydCatalog, geelyCatalog, gatesCatalog, beltsCatalog];
 
-export const catalogItems = catalogs.flatMap((catalog) =>
-  Array.isArray(catalog.items) ? catalog.items : []
+export const catalogItems = catalogs.flatMap((catalog, catalogIndex) =>
+  Array.isArray(catalog.items)
+    ? catalog.items.map((item, itemIndex) => ({
+        ...item,
+        __catalogKey: `catalog-${catalogIndex}-item-${itemIndex}`,
+      }))
+    : []
 );
 
 export const catalogMetadata = {
-  description: "Catálogo consolidado de repuestos BYD, Geely y Gates sin precios.",
+  description: "Catálogo consolidado de repuestos BYD, Geely, Gates y Belts sin precios.",
   price_fields_removed: catalogs.every((catalog) => catalog.metadata?.price_fields_removed),
   total_items: catalogItems.length,
   models: [...new Set(catalogItems.map((item) => item.model).filter(Boolean))].sort(),
@@ -105,6 +111,7 @@ export function getDetailFields(product = {}) {
 
   return Object.entries(product)
     .filter(([key, value]) => {
+      if (key.startsWith("__")) return false;
       if (key === "image") return false;
       if (Array.isArray(value)) return value.length > 0;
       if (typeof value === "string") return value.trim().length > 0;
@@ -150,5 +157,8 @@ export function getSearchableText(product = {}) {
 }
 
 export function findCatalogItem(id = "") {
-  return catalogItems.find((item) => item.id === id);
+  return (
+    catalogItems.find((item) => item.__catalogKey === id) ||
+    catalogItems.find((item) => item.id === id)
+  );
 }

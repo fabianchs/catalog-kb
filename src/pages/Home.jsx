@@ -14,7 +14,13 @@ import {
 } from "../data/catalog";
 
 export const Home = () => {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(100);
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
@@ -62,7 +68,10 @@ export const Home = () => {
   );
 
   const brands = useMemo(
-    () => [...new Set(products.map((item) => getBrand(item)).filter(Boolean))],
+    () =>
+      [...new Set(products.map((item) => getBrand(item)).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b, undefined, { sensitivity: "base" })
+      ),
     [products]
   );
 
@@ -113,6 +122,10 @@ export const Home = () => {
     }
   }, [engineCodes, selectedEngineCode]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [query, selectedModel, selectedCategory, selectedSubcategory, selectedBrand, selectedYear, selectedEngine, selectedEngineCode]);
+
   const filteredProducts = useMemo(() => {
     const normalizedQuery = normalizeText(query);
 
@@ -148,6 +161,12 @@ export const Home = () => {
     });
   }, [products, query, selectedModel, selectedCategory, selectedSubcategory, selectedBrand, selectedYear, selectedEngine, selectedEngineCode]);
 
+  const visibleProducts = useMemo(() => {
+    return filteredProducts.slice(0, page * pageSize);
+  }, [filteredProducts, page, pageSize]);
+
+  const hasMoreProducts = visibleProducts.length < filteredProducts.length;
+
   return (
     <main className="catalog-page">
       <section className="hero-section py-5 text-white">
@@ -159,7 +178,7 @@ export const Home = () => {
                 Catálogo de repuestos Kolber Autoparts
               </h1>
               <p className="lead text-white-75 mt-3">
-                Busca piezas BYD, Geely y Gates por marca, modelo, motor, código, año, categoría o OEM/part number.
+                Busca piezas BYD, Geely, Gates y Belts por marca, modelo, motor, código, año, categoría o OEM/part number.
               </p>
             </div>
             <div className="col-lg-5 mt-5 mt-lg-0">
@@ -326,8 +345,8 @@ export const Home = () => {
               <thead className="table-light">
                 <tr>
                   <th scope="col">Parte</th>
-                  <th scope="col">Modelo</th>
                   <th scope="col">Marca</th>
+                  <th scope="col">Modelo</th>
                   <th scope="col">Categoría</th>
                   <th scope="col">Código</th>
                   <th scope="col">Subcategoría</th>
@@ -335,21 +354,21 @@ export const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <tr key={product.id}>
+                {visibleProducts.length > 0 ? (
+                  visibleProducts.map((product) => (
+                    <tr key={product.__catalogKey || product.id}>
                       <td>
                         <strong>{getDisplayName(product)}</strong>
                         <div className="text-muted small">{product.description}</div>
                       </td>
-                      <td>{product.model}</td>
                       <td>{getBrand(product)}</td>
+                      <td>{product.model}</td>
                       <td>{getCategory(product)}</td>
                       <td>{getPrimaryCode(product)}</td>
                       <td>{getSubcategory(product)}</td>
                       <td>
                         <Link
-                          to={`/single/${encodeURIComponent(product.id)}`}
+                          to={`/single/${encodeURIComponent(product.__catalogKey || product.id)}`}
                           className="btn btn-sm btn-outline-success"
                         >
                           Ver
@@ -367,6 +386,37 @@ export const Home = () => {
               </tbody>
             </table>
           </div>
+          {filteredProducts.length > 0 && (
+            <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mt-3 text-muted small">
+              <span>
+                Mostrando {visibleProducts.length} de {filteredProducts.length} piezas.
+              </span>
+              <div className="d-flex align-items-center gap-2">
+                <label className="form-label mb-0">Por página</label>
+                <select
+                  value={pageSize}
+                  onChange={(event) => {
+                    setPageSize(Number(event.target.value));
+                    setPage(1);
+                  }}
+                  className="form-select form-select-sm w-auto"
+                >
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={200}>200</option>
+                </select>
+                {hasMoreProducts && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-success btn-sm"
+                    onClick={() => setPage((currentPage) => currentPage + 1)}
+                  >
+                    Cargar más
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </main>

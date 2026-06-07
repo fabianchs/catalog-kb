@@ -27,7 +27,11 @@ export const Single = () => {
       <div className="container py-5 text-center">
         <h1 className="display-6">Producto no encontrado</h1>
         <p className="text-muted">El producto solicitado no existe en este catálogo.</p>
-        <Link to="/" className="btn btn-brand">
+        <Link
+          to="/"
+          className="btn btn-brand"
+          onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "auto" })}
+        >
           Volver al catálogo
         </Link>
       </div>
@@ -74,7 +78,11 @@ export const Single = () => {
               </table>
             </div>
             <div className="d-flex flex-wrap gap-3">
-              <Link to="/" className="btn btn-outline-secondary btn-lg">
+              <Link
+                to="/"
+                className="btn btn-outline-secondary btn-lg"
+                onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "auto" })}
+              >
                 Volver al catálogo
               </Link>
             </div>
